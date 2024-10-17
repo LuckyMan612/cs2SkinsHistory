@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2 Skins History</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>CS2 <span>Skins History</span></h1>
+  </header>
+
+  <main>
+    <section class="controls">
+      <label for="viewMode">View Mode:</label>
+      <select id="viewMode">
+        <option value="daily" selected>Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+      
+      <label for="dataType">Data Type:</label>
+      <select id="dataType">
+        <option value="total" selected>Total Skins</option>
+        <option value="difference">Difference Since Last Update</option>
+      </select>
+    </section>
+
+    <section class="chart-container">
+      <h2>Skins Growth Chart</h2>
+      <canvas id="skinsChart"></canvas>
+    </section>
+
+    <section class="stats">
+      <div class="stat-item optional-stat">
+        <h2>Optional Statistics</h2>
+        <div id="average-growth">Average Monthly Growth: 0</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

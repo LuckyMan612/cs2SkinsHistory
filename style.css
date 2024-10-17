@@ -1,0 +1,80 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #ece9e6, #ffffff);
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  
+  header {
+    background-color: #282c34;
+    color: #ffffff;
+    width: 100%;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 1.8rem;
+  }
+  
+  header span {
+    color: #61dafb;
+  }
+  
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+  }
+  
+  select {
+    padding: 5px 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .stats {
+    margin-top: 20px;
+    width: 100%;
+  }
+  
+  .stat-item {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .optional-stat {
+    display: none; /* Ukryte jako opcjonalne, może być później wywołane przez JS */
+  }
+  
+  .chart-container {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  canvas {
+    max-width: 100%;
+  }
+  
