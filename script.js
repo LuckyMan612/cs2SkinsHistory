@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const viewModeSelect = document.getElementById('viewMode');
     const dataTypeSelect = document.getElementById('dataType');
     
-    const response = await fetch('/api/history.json');
+    const response = await fetch('https://raw.githubusercontent.com/LuckyMan612/cs2SkinsHistory/refs/heads/main/api/history.json');
     const history = await response.json();
   
     let filteredData = history;
