@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const viewModeSelect = document.getElementById('viewMode');
     const dataTypeSelect = document.getElementById('dataType');
     
-    const response = await fetch('https://raw.githubusercontent.com/LuckyMan612/cs2SkinsHistory/refs/heads/main/api/history.json');
+    const response = await fetch('/api/history.json');
     const history = await response.json();
   
     let filteredData = history;
@@ -28,34 +28,40 @@ document.addEventListener('DOMContentLoaded', async function() {
     function isNewYear(currentEntry, previousEntry) {
       return !previousEntry || currentEntry.date.slice(0, 4) !== previousEntry.date.slice(0, 4);
     }
-  
+
     // Function to filter data based on viewMode and dataType
     function filterData(viewMode, dataType) {
       const filtered = [];
+      const startDate = new Date("2024-10-18"); // Start date for daily and weekly filters
+      let prevSkins = 0;
       let maxSkinsForDay = 0;
       let lastEntryForMonth = null;
       let lastEntryForYear = null;
       let lastEntryForWeek = null;
   
       history.forEach((entry, index) => {
-        const currentDate = entry.date.split('T')[0]; // Get only the date part (YYYY-MM-DD)
+        const currentDate = new Date(entry.date.split('T')[0]);
+        const currentDateStr = entry.date.split('T')[0];
   
         if (viewMode === 'daily') {
+          if (index === 0 || currentDate < startDate) return; // Ignore first entry and dates before 18.10.2024
           if (isNewDay(entry, history[index - 1])) {
             maxSkinsForDay = entry.skins;
-            filtered.push({ date: currentDate, skins: maxSkinsForDay });
+            filtered.push({ date: currentDateStr, skins: maxSkinsForDay });
           } else if (entry.skins > maxSkinsForDay) {
             maxSkinsForDay = entry.skins;
             filtered[filtered.length - 1].skins = maxSkinsForDay; // Update the max skin count for this day
           }
         } else if (viewMode === 'weekly') {
+          if (index === 0 || currentDate < startDate) return; // Ignore first entry and dates before 18.10.2024
           if (isNewWeek(entry, history[index - 1])) {
-            lastEntryForWeek = { date: currentDate, skins: entry.skins };
+            lastEntryForWeek = { date: currentDateStr, skins: entry.skins };
             filtered.push(lastEntryForWeek);
           } else {
             lastEntryForWeek.skins = entry.skins; // Update latest weekly data
           }
         } else if (viewMode === 'monthly') {
+          if (index === 0) return; // Ignore first entry
           if (isNewMonth(entry, history[index - 1])) {
             if (lastEntryForMonth) {
               filtered.push(lastEntryForMonth);
@@ -65,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             lastEntryForMonth.skins = entry.skins; // Take the latest entry in the month
           }
         } else if (viewMode === 'yearly') {
+          if (index === 0) return; // Ignore first entry
           if (isNewYear(entry, history[index - 1])) {
             if (lastEntryForYear) {
               filtered.push(lastEntryForYear);
@@ -147,4 +154,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     filteredData = filterData(currentViewMode, currentDataType);
     updateChart();
   });
-  
