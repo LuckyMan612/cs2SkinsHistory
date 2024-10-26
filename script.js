@@ -5,152 +5,137 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     const response = await fetch('https://raw.githubusercontent.com/LuckyMan612/cs2SkinsHistory/refs/heads/main/api/history.json');
     const history = await response.json();
-  
-    let filteredData = history;
+    
+    let filteredData = [];
     let currentDataType = 'total';
-    let currentViewMode = 'daily';
-  
-    // Helper functions to filter by date
+    let currentViewMode = 'weekly';
+
+    // Helper functions for date filtering
     function isNewDay(currentEntry, previousEntry) {
-      return !previousEntry || currentEntry.date.split('T')[0] !== previousEntry.date.split('T')[0];
-    }
-  
-    function isNewWeek(currentEntry, previousEntry) {
-      const currentDate = new Date(currentEntry.date);
-      const previousDate = previousEntry ? new Date(previousEntry.date) : null;
-      return !previousDate || (currentDate - previousDate) >= (7 * 24 * 60 * 60 * 1000); // 7 days in ms
-    }
-  
-    function isNewMonth(currentEntry, previousEntry) {
-      return !previousEntry || currentEntry.date.slice(0, 7) !== previousEntry.date.slice(0, 7);
-    }
-  
-    function isNewYear(currentEntry, previousEntry) {
-      return !previousEntry || currentEntry.date.slice(0, 4) !== previousEntry.date.slice(0, 4);
+        return !previousEntry || currentEntry.date.split('T')[0] !== previousEntry.date.split('T')[0];
     }
 
-    // Function to filter data based on viewMode and dataType
+    function isNewWeek(currentEntry, previousEntry) {
+        const currentDate = new Date(currentEntry.date);
+        const previousDate = previousEntry ? new Date(previousEntry.date) : null;
+        return !previousDate || currentDate - previousDate >= 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+    }
+
+    function isNewMonth(currentEntry, previousEntry) {
+        return !previousEntry || currentEntry.date.slice(0, 7) !== previousEntry.date.slice(0, 7);
+    }
+
+    function isNewYear(currentEntry, previousEntry) {
+        return !previousEntry || currentEntry.date.slice(0, 4) !== previousEntry.date.slice(0, 4);
+    }
+
+    // Filtering data based on view mode and data type
     function filterData(viewMode, dataType) {
-      const filtered = [];
-      const startDate = new Date("2024-10-18"); // Start date for daily and weekly filters
-      let prevSkins = 0;
-      let maxSkinsForDay = 0;
-      let lastEntryForMonth = null;
-      let lastEntryForYear = null;
-      let lastEntryForWeek = null;
-  
-      history.forEach((entry, index) => {
-        const currentDate = new Date(entry.date.split('T')[0]);
-        const currentDateStr = entry.date.split('T')[0];
-  
-        if (viewMode === 'daily') {
-          if (index === 0 || currentDate < startDate) return; // Ignore first entry and dates before 18.10.2024
-          if (isNewDay(entry, history[index - 1])) {
-            maxSkinsForDay = entry.skins;
-            filtered.push({ date: currentDateStr, skins: maxSkinsForDay });
-          } else if (entry.skins > maxSkinsForDay) {
-            maxSkinsForDay = entry.skins;
-            filtered[filtered.length - 1].skins = maxSkinsForDay; // Update the max skin count for this day
-          }
-        } else if (viewMode === 'weekly') {
-          if (index === 0 || currentDate < startDate) return; // Ignore first entry and dates before 18.10.2024
-          if (isNewWeek(entry, history[index - 1])) {
-            lastEntryForWeek = { date: currentDateStr, skins: entry.skins };
-            filtered.push(lastEntryForWeek);
-          } else {
-            lastEntryForWeek.skins = entry.skins; // Update latest weekly data
-          }
-        } else if (viewMode === 'monthly') {
-          if (index === 0) return; // Ignore first entry
-          if (isNewMonth(entry, history[index - 1])) {
-            if (lastEntryForMonth) {
-              filtered.push(lastEntryForMonth);
+        const filtered = [];
+        let lastEntry = null;
+        let maxSkinsForDay = 0;
+
+        history.forEach((entry, index) => {
+            const currentDate = entry.date.split('T')[0];
+            const startDate = new Date("2024-10-18");
+
+            if (viewMode === 'daily' && new Date(entry.date) >= startDate) {
+                if (isNewDay(entry, lastEntry)) {
+                    maxSkinsForDay = entry.skins;
+                    filtered.push({ date: currentDate, skins: maxSkinsForDay });
+                } else if (entry.skins > maxSkinsForDay) {
+                    maxSkinsForDay = entry.skins;
+                    filtered[filtered.length - 1].skins = maxSkinsForDay;
+                }
+                lastEntry = entry;
+            } else if (viewMode === 'weekly' && new Date(entry.date) >= startDate) {
+                if (isNewWeek(entry, lastEntry)) {
+                    filtered.push({ date: currentDate, skins: entry.skins });
+                } else {
+                    filtered[filtered.length - 1].skins = entry.skins;
+                }
+                lastEntry = entry;
+            } else if (viewMode === 'monthly') {
+                if (isNewMonth(entry, lastEntry)) {
+                    if (lastEntry) filtered.push(lastEntry);
+                    lastEntry = { date: entry.date.slice(0, 7), skins: entry.skins };
+                } else {
+                    lastEntry.skins = entry.skins;
+                }
+            } else if (viewMode === 'yearly') {
+                if (isNewYear(entry, lastEntry)) {
+                    if (lastEntry) filtered.push(lastEntry);
+                    lastEntry = { date: entry.date.slice(0, 4), skins: entry.skins };
+                } else {
+                    lastEntry.skins = entry.skins;
+                }
             }
-            lastEntryForMonth = { date: entry.date.slice(0, 7), skins: entry.skins }; // YYYY-MM
-          } else {
-            lastEntryForMonth.skins = entry.skins; // Take the latest entry in the month
-          }
-        } else if (viewMode === 'yearly') {
-          if (index === 0) return; // Ignore first entry
-          if (isNewYear(entry, history[index - 1])) {
-            if (lastEntryForYear) {
-              filtered.push(lastEntryForYear);
+        });
+
+        if ((viewMode === 'monthly' || viewMode === 'yearly') && lastEntry) {
+            filtered.push(lastEntry);
+        }
+
+        // Adjust for dataType (total vs difference)
+        if (dataType === 'difference') {
+            for (let i = filtered.length - 1; i > 0; i--) {
+                filtered[i].skins = filtered[i].skins - filtered[i - 1].skins;
             }
-            lastEntryForYear = { date: entry.date.slice(0, 4), skins: entry.skins }; // YYYY
-          } else {
-            lastEntryForYear.skins = entry.skins; // Take the latest entry in the year
-          }
+            filtered.shift(); // Remove the first entry for accurate difference
         }
-      });
-  
-      // Push the last entry for month or year if needed
-      if (viewMode === 'monthly' && lastEntryForMonth) {
-        filtered.push(lastEntryForMonth);
-      }
-      if (viewMode === 'yearly' && lastEntryForYear) {
-        filtered.push(lastEntryForYear);
-      }
-  
-      // Adjust for dataType (total vs difference)
-      if (dataType === 'difference') {
-        for (let i = filtered.length - 1; i > 0; i--) {
-          filtered[i].skins = filtered[i].skins - filtered[i - 1].skins;
-        }
-        filtered.shift(); // Remove the first entry to hide the initial large difference
-      }
-  
-      return filtered;
+
+        return filtered;
     }
-  
-    // Function to update chart
+
+    // Function to update the chart
     function updateChart() {
-      const labels = filteredData.map(entry => entry.date);
-      const data = filteredData.map(entry => entry.skins);
-      
-      skinsChart.data.labels = labels;
-      skinsChart.data.datasets[0].data = data;
-      skinsChart.update();
+        const labels = filteredData.map(entry => entry.date);
+        const data = filteredData.map(entry => entry.skins);
+        
+        skinsChart.data.labels = labels;
+        skinsChart.data.datasets[0].data = data;
+        skinsChart.update();
     }
-  
+
     // Event listeners for viewMode and dataType changes
     viewModeSelect.addEventListener('change', () => {
-      currentViewMode = viewModeSelect.value;
-      filteredData = filterData(currentViewMode, currentDataType);
-      updateChart();
+        currentViewMode = viewModeSelect.value;
+        filteredData = filterData(currentViewMode, currentDataType);
+        updateChart();
     });
-  
+
     dataTypeSelect.addEventListener('change', () => {
-      currentDataType = dataTypeSelect.value;
-      filteredData = filterData(currentViewMode, currentDataType);
-      updateChart();
+        currentDataType = dataTypeSelect.value;
+        filteredData = filterData(currentViewMode, currentDataType);
+        updateChart();
     });
-  
-    // Initialize chart
+
+    // Initialize the chart
     const skinsChart = new Chart(skinsChartElem, {
-      type: 'line',
-      data: {
-        labels: filteredData.map(entry => entry.date),
-        datasets: [{
-          label: 'Skins',
-          data: filteredData.map(entry => entry.skins),
-          backgroundColor: 'rgba(97, 218, 251, 0.2)',
-          borderColor: '#61dafb',
-          borderWidth: 2,
-          pointBackgroundColor: '#61dafb',
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+        type: 'line',
+        data: {
+            labels: filteredData.map(entry => entry.date),
+            datasets: [{
+                label: 'Skins',
+                data: filteredData.map(entry => entry.skins),
+                backgroundColor: 'rgba(97, 218, 251, 0.2)',
+                borderColor: '#61dafb',
+                borderWidth: 2,
+                pointBackgroundColor: '#61dafb',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
-      }
     });
-  
-    // Initial filtering of data and chart update
+
+    // Initial data filtering and chart update
     filteredData = filterData(currentViewMode, currentDataType);
     updateChart();
-  });
+});
