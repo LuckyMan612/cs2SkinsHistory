@@ -34,10 +34,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         const filtered = [];
         let lastEntry = null;
         let maxSkinsForDay = 0;
+        const startDate = new Date("2024-10-18");
 
         history.forEach((entry, index) => {
             const currentDate = entry.date.split('T')[0];
-            const startDate = new Date("2024-10-18");
 
             if (viewMode === 'daily' && new Date(entry.date) >= startDate) {
                 if (isNewDay(entry, lastEntry)) {
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             for (let i = filtered.length - 1; i > 0; i--) {
                 filtered[i].skins = filtered[i].skins - filtered[i - 1].skins;
             }
-            filtered.shift(); // Remove the first entry for accurate difference
+            if (viewMode !== 'yearly') filtered.shift(); // Remove first entry for accurate difference
         }
 
         return filtered;
