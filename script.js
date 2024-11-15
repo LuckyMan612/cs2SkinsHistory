@@ -1,12 +1,23 @@
-document.addEventListener('DOMContentLoaded', async function() {
-        const betaViewButton = document.getElementById('betaViewButton');
-    let isBetaView = false;
+document.addEventListener('DOMContentLoaded', async function () {
+    const skinsChartElem = document.getElementById('skinsChart').getContext('2d');
+    const viewModeSelect = document.getElementById('viewMode');
+    const dataTypeSelect = document.getElementById('dataType');
+    const betaViewButton = document.getElementById('betaViewButton');
 
+    let history = [];
+    let isBetaView = false;
+    let filteredData = [];
+    let currentViewMode = 'daily';
+    let currentDataType = 'total';
+
+    // Pobieranie danych
     async function fetchData() {
         const historyResponse = await fetch('https://luckyman612.github.io/cs2SkinsHistory/api/history.json');
         const historyData = await historyResponse.json();
 
-        if (!isBetaView) return historyData;
+        if (!isBetaView) {
+            return historyData;
+        }
 
         const oldResponse = await fetch('https://luckyman612.github.io/cs2SkinsHistory/api/old.json');
         const oldData = await oldResponse.json();
@@ -14,26 +25,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return oldData.concat(historyData.filter(entry => entry.date >= '2024-10-17'));
     }
 
-    betaViewButton.addEventListener('click', async () => {
-        isBetaView = !isBetaView; // Toggle Beta View
-        betaViewButton.textContent = isBetaView ? "Beta View (ON)" : "Beta View";
-
-        const data = await fetchData();
-        filteredData = filterData(currentViewMode, currentDataType, data);
-        updateChart();
-    });
-    const skinsChartElem = document.getElementById('skinsChart').getContext('2d');
-    const viewModeSelect = document.getElementById('viewMode');
-    const dataTypeSelect = document.getElementById('dataType');
-    
-    const response = await fetch('https://luckyman612.github.io/cs2SkinsHistory/api/history.json');
-    const history = await response.json();
-
-    let filteredData = history;
-    let currentDataType = 'total';
-    let currentViewMode = 'daily';
-
-    // Helper functions to filter by date
+    // Funkcje pomocnicze do filtrowania dat
     function isNewDay(currentEntry, previousEntry) {
         return !previousEntry || currentEntry.date.split('T')[0] !== previousEntry.date.split('T')[0];
     }
@@ -46,19 +38,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         return !previousEntry || currentEntry.date.slice(0, 4) !== previousEntry.date.slice(0, 4);
     }
 
-    // Function to filter data based on viewMode and dataType
-    function filterData(viewMode, dataType) {
+    // Filtrowanie danych na podstawie trybu widoku i typu danych
+    function filterData(viewMode, dataType, data) {
         const filtered = [];
-        let prevSkins = 0;
         let maxSkinsForDay = 0;
         let lastEntryForMonth = null;
         let lastEntryForYear = null;
 
-        history.forEach((entry, index) => {
-            const currentDate = entry.date.split('T')[0]; // Get only the date part (YYYY-MM-DD)
+        data.forEach((entry, index) => {
+            const currentDate = entry.date.split('T')[0];
 
             if (viewMode === 'daily' && currentDate >= '2024-10-18') {
-                if (isNewDay(entry, history[index - 1])) {
+                if (isNewDay(entry, data[index - 1])) {
                     maxSkinsForDay = entry.skins;
                     filtered.push({ date: currentDate, skins: maxSkinsForDay });
                 } else if (entry.skins > maxSkinsForDay) {
@@ -66,20 +57,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                     filtered[filtered.length - 1].skins = maxSkinsForDay;
                 }
             } else if (viewMode === 'monthly') {
-                if (isNewMonth(entry, history[index - 1])) {
+                if (isNewMonth(entry, data[index - 1])) {
                     if (lastEntryForMonth) {
                         filtered.push(lastEntryForMonth);
                     }
-                    lastEntryForMonth = { date: entry.date.slice(0, 7), skins: entry.skins }; // YYYY-MM
+                    lastEntryForMonth = { date: entry.date.slice(0, 7), skins: entry.skins };
                 } else {
                     lastEntryForMonth.skins = entry.skins;
                 }
             } else if (viewMode === 'yearly') {
-                if (isNewYear(entry, history[index - 1])) {
+                if (isNewYear(entry, data[index - 1])) {
                     if (lastEntryForYear) {
                         filtered.push(lastEntryForYear);
                     }
-                    lastEntryForYear = { date: entry.date.slice(0, 4), skins: entry.skins }; // YYYY
+                    lastEntryForYear = { date: entry.date.slice(0, 4), skins: entry.skins };
                 } else {
                     lastEntryForYear.skins = entry.skins;
                 }
@@ -97,40 +88,30 @@ document.addEventListener('DOMContentLoaded', async function() {
             for (let i = filtered.length - 1; i > 0; i--) {
                 filtered[i].skins = filtered[i].skins - filtered[i - 1].skins;
             }
-            filtered.shift(); // Remove the first entry to hide the initial large difference
+            filtered.shift(); // Usuń pierwszy wpis
         }
 
         return filtered;
     }
 
+    // Aktualizacja wykresu
     function updateChart() {
         const labels = filteredData.map(entry => entry.date);
         const data = filteredData.map(entry => entry.skins);
-        
+
         skinsChart.data.labels = labels;
         skinsChart.data.datasets[0].data = data;
         skinsChart.update();
     }
 
-    viewModeSelect.addEventListener('change', () => {
-        currentViewMode = viewModeSelect.value;
-        filteredData = filterData(currentViewMode, currentDataType);
-        updateChart();
-    });
-
-    dataTypeSelect.addEventListener('change', () => {
-        currentDataType = dataTypeSelect.value;
-        filteredData = filterData(currentViewMode, currentDataType);
-        updateChart();
-    });
-
+    // Inicjalizacja wykresu
     const skinsChart = new Chart(skinsChartElem, {
         type: 'line',
         data: {
-            labels: filteredData.map(entry => entry.date),
+            labels: [],
             datasets: [{
                 label: 'Skins',
-                data: filteredData.map(entry => entry.skins),
+                data: [],
                 backgroundColor: 'rgba(97, 218, 251, 0.2)',
                 borderColor: '#61dafb',
                 borderWidth: 2,
@@ -148,6 +129,31 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    filteredData = filterData(currentViewMode, currentDataType);
+    // Obsługa zmiany trybu widoku
+    viewModeSelect.addEventListener('change', async () => {
+        currentViewMode = viewModeSelect.value;
+        filteredData = filterData(currentViewMode, currentDataType, history);
+        updateChart();
+    });
+
+    // Obsługa zmiany typu danych
+    dataTypeSelect.addEventListener('change', async () => {
+        currentDataType = dataTypeSelect.value;
+        filteredData = filterData(currentViewMode, currentDataType, history);
+        updateChart();
+    });
+
+    // Obsługa przycisku Beta View
+    betaViewButton.addEventListener('click', async () => {
+        isBetaView = !isBetaView;
+        betaViewButton.textContent = isBetaView ? "Beta View (ON)" : "Beta View";
+        history = await fetchData();
+        filteredData = filterData(currentViewMode, currentDataType, history);
+        updateChart();
+    });
+
+    // Pobierz dane początkowe i załaduj wykres
+    history = await fetchData();
+    filteredData = filterData(currentViewMode, currentDataType, history);
     updateChart();
 });
