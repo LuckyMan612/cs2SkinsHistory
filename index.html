@@ -15,20 +15,28 @@
   </header>
 
   <main>
-    <section class="controls">
-      <label for="viewMode">View Mode:</label>
-      <select id="viewMode">
-        <option value="daily" selected>Daily</option>
-        <option value="monthly">Monthly</option>
-        <option value="yearly">Yearly</option>
-      </select>
-      
-      <label for="dataType">Data Type:</label>
-      <select id="dataType">
-        <option value="total" selected>Total Skins</option>
-        <option value="difference">Difference Since Last Update</option>
-      </select>
-    </section>
+    
+<section class="controls">
+  <label for="viewMode">View Mode:</label>
+  <select id="viewMode">
+    <option value="daily" selected>Daily</option>
+    <option value="monthly">Monthly</option>
+    <option value="yearly">Yearly</option>
+  </select>
+  
+  <label for="dataType">Data Type:</label>
+  <select id="dataType">
+    <option value="total" selected>Total Skins</option>
+    <option value="difference">Difference Since Last Update</option>
+  </select>
+
+  <button id="betaViewButton" class="tooltip">
+    Beta View
+    <span class="tooltip-text">
+      The number of skins is only an estimate and not accurate, based on historical data.
+    </span>
+  </button>
+</section>
 
     <section class="chart-container">
       <h2>Skins Growth Chart</h2>
