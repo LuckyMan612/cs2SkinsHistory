@@ -22,7 +22,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         const oldResponse = await fetch('https://luckyman612.github.io/cs2SkinsHistory/api/old.json');
         const oldData = await oldResponse.json();
 
-        return oldData.concat(historyData.filter(entry => entry.date >= '2024-10-17'));
+        // Łącz dane - old.json do 2024-10-17, reszta z history.json
+        const combinedData = oldData.concat(historyData.filter(entry => entry.date > '2024-10-17'));
+
+        return combinedData;
     }
 
     // Funkcje pomocnicze do filtrowania dat
