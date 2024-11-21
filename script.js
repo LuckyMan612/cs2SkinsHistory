@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         data.forEach((entry, index) => {
             const currentDate = entry.date.split('T')[0];
 
-            if (viewMode === 'daily' && currentDate >= '2024-10-18') {
+            if (viewMode === 'daily') {
                 if (isNewDay(entry, data[index - 1])) {
                     maxSkinsForDay = entry.skins;
                     filtered.push({ date: currentDate, skins: maxSkinsForDay });
