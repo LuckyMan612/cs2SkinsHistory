@@ -23,9 +23,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         const oldData = await oldResponse.json();
 
         // Łącz dane - old.json do 2024-10-17, reszta z history.json
-        const combinedData = oldData.concat(historyData.filter(entry => entry.date > '2024-10-17'));
-
-        return combinedData;
+        return historyData.map(entry => {
+            if (entry.date <= '2024-10-17') {
+                const oldEntry = oldData.find(old => old.date === entry.date);
+                return oldEntry ? oldEntry : entry;
+            }
+            return entry;
+        });
     }
 
     // Funkcje pomocnicze do filtrowania dat
