@@ -23,13 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const oldData = await oldResponse.json();
 
         // Łącz dane - old.json do 2024-10-16, reszta z history.json
-        return historyData.map(entry => {
-            if (entry.date <= '2024-10-16') {
-                const oldEntry = oldData.find(old => old.date === entry.date);
-                return oldEntry ? oldEntry : entry;
-            }
-            return entry;
-        });
+        return [...oldData.filter(entry => entry.date <= '2024-10-16'), ...historyData.filter(entry => entry.date > '2024-10-16')];
     }
 
     // Funkcje pomocnicze do filtrowania dat
@@ -97,7 +91,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             for (let i = filtered.length - 1; i > 0; i--) {
                 filtered[i].skins = filtered[i].skins - filtered[i - 1].skins;
             }
-            filtered.shift(); // Usuń pierwszy wpis
+            if (viewMode === 'daily' || viewMode === 'monthly') {
+                filtered.shift(); // Usuń pierwszy wpis
+            }
         }
 
         return filtered;
