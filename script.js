@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         const oldResponse = await fetch('https://luckyman612.github.io/cs2SkinsHistory/api/old.json');
         const oldData = await oldResponse.json();
 
-        // Łącz dane - old.json do 2024-10-17, reszta z history.json
+        // Łącz dane - old.json do 2024-10-16, reszta z history.json
         return historyData.map(entry => {
-            if (entry.date <= '2024-10-17') {
+            if (entry.date <= '2024-10-16') {
                 const oldEntry = oldData.find(old => old.date === entry.date);
                 return oldEntry ? oldEntry : entry;
             }
@@ -56,12 +56,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             const currentDate = entry.date.split('T')[0];
 
             if (viewMode === 'daily') {
-                if (isNewDay(entry, data[index - 1])) {
-                    maxSkinsForDay = entry.skins;
-                    filtered.push({ date: currentDate, skins: maxSkinsForDay });
-                } else if (entry.skins > maxSkinsForDay) {
-                    maxSkinsForDay = entry.skins;
-                    filtered[filtered.length - 1].skins = maxSkinsForDay;
+                if (entry.date >= '2024-10-17') {
+                    if (isNewDay(entry, data[index - 1])) {
+                        maxSkinsForDay = entry.skins;
+                        filtered.push({ date: currentDate, skins: maxSkinsForDay });
+                    } else if (entry.skins > maxSkinsForDay) {
+                        maxSkinsForDay = entry.skins;
+                        filtered[filtered.length - 1].skins = maxSkinsForDay;
+                    }
                 }
             } else if (viewMode === 'monthly') {
                 if (isNewMonth(entry, data[index - 1])) {
